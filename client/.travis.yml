@@ -1,0 +1,25 @@
+language: generic
+
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t fenriss/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+    - docker build -t fenriss/multi-client ./client
+    - docker build -t fenriss/multi-nginx ./nginx
+    - docker build -t fenriss/multi-server ./server
+    - docker build -t fenriss/multi-worker ./worker
+
+#log in to the docker CLI
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+#take images and push to docker hub
+- docker push fenriss/multi-client
+- docker push fenriss/multi-nginx
+- docker push fenriss/multi-server
+- docker push fenriss/multi-worker
